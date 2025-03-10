@@ -1,3 +1,4 @@
+/*
 package com.epicode.EASYPLAY.security;
 
 
@@ -33,13 +34,15 @@ public class JwtUtil {
         JWTPARSER = Jwts.parser().setSigningKey(JWTSECRET);
     }
 
-    /**
+    */
+/**
      * Metodo di creazione Token.
      * Recupera le info da Utente e le inserisce nel Token finale in formato String
      *
      * @param utente
      * @return il token in formato String
-     */
+     *//*
+
     public String creaToken(Utente utente) {
         // Impostazione del Claims (Payload)
         Claims claims = Jwts.claims().setSubject(utente.getUsername());
@@ -59,12 +62,14 @@ public class JwtUtil {
         return token;
     }
 
-    /**
+    */
+/**
      * Estrazione del TOKEN in arrivo all'interno della request
      *
      * @param request
      * @return
-     */
+     *//*
+
     public String recuperoToken(HttpServletRequest request) throws CreateTokenException {
 
         // Recupero dall'header della richiesta il token con prefisso
@@ -79,14 +84,16 @@ public class JwtUtil {
         throw new CreateTokenException("Non è stato possibile recuperare il TOKEN");
     }
 
-    /**
+    */
+/**
      * Metodo di validazione del Token.
      * Recupera il Token e ne estra solo il payload.
      *
      * @param request
      * @return
      * @throws CreateTokenException
-     */
+     *//*
+
     public Claims validaClaims(HttpServletRequest request) throws CreateTokenException {
         try {
             String token = recuperoToken(request);
@@ -100,12 +107,14 @@ public class JwtUtil {
         }
     }
 
-    /**
+    */
+/*
      * Metodo che controlla la scadenza del Token
      *
      * @param claims
      * @return
-     */
+     *//*
+
     public boolean checkExpiration(Claims claims) {
         try {
             return claims.getExpiration().after(new Date());
@@ -115,5 +124,82 @@ public class JwtUtil {
 
     }
 
+}
+
+*/
+
+package com.epicode.EASYPLAY.security;
+
+import com.epicode.EASYPLAY.exception.CreateTokenException;
+import com.epicode.EASYPLAY.model.Utente;
+import io.jsonwebtoken.*;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
+@Component
+public class JwtUtil {
+
+    @Value("${jwt.secret}")
+    private String JWTSECRET;
+    private long scadenza = 15;
+    private final String TOKEN_HEADER = "Authorization";
+    private final String TOKEN_PREFIX = "Bearer ";
+    private JwtParser JWTPARSER;
+
+    @PostConstruct
+    public void init() {
+        JWTPARSER = Jwts.parser().setSigningKey(JWTSECRET);
+    }
+
+    public String creaToken(Utente utente) {
+        Claims claims = Jwts.claims().setSubject(utente.getUsername());
+        claims.put("roles", utente.getRuolo()); // Aggiungi il prefisso "ROLE_"
+        claims.put("firstname", utente.getNome());
+        claims.put("lastname", utente.getCognome());
+        Date dataCreazioneToken = new Date();
+        Date dataScadenza = new Date(dataCreazioneToken.getTime() + TimeUnit.MINUTES.toMillis(scadenza));
+
+        String token = Jwts.builder()
+                .setClaims(claims)
+                .setExpiration(dataScadenza)
+                .signWith(SignatureAlgorithm.HS256, JWTSECRET)
+                .compact();
+
+        return token;
+    }
+
+    public String recuperoToken(HttpServletRequest request) throws CreateTokenException {
+        String bearerToken = request.getHeader(TOKEN_HEADER);
+        if (bearerToken != null && bearerToken.startsWith(TOKEN_PREFIX)) {
+            return bearerToken.substring(TOKEN_PREFIX.length());
+        }
+        throw new CreateTokenException("Non è stato possibile recuperare il TOKEN");
+    }
+
+    public Claims validaClaims(HttpServletRequest request) throws CreateTokenException {
+        try {
+            String token = recuperoToken(request);
+            return JWTPARSER.parseClaimsJws(token).getBody();
+        } catch (ExpiredJwtException ex) {
+            request.setAttribute("expired", ex.getMessage());
+            throw ex;
+        } catch (Exception ex) {
+            request.setAttribute("token invalido", ex.getMessage());
+            throw ex;
+        }
+    }
+
+    public boolean checkExpiration(Claims claims) {
+        try {
+            return claims.getExpiration().after(new Date());
+        } catch (Exception ex) {
+            throw ex;
+        }
+    }
 }
 

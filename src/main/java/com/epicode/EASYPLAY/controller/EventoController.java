@@ -65,8 +65,11 @@ public class EventoController {
 
 package com.epicode.EASYPLAY.controller;
 
+import com.epicode.EASYPLAY.model.Evento;
 import com.epicode.EASYPLAY.payload.EventoDTO;
 import com.epicode.EASYPLAY.model.Utente;
+import com.epicode.EASYPLAY.payload.response.EventoDTOnoid;
+import com.epicode.EASYPLAY.repository.UtenteRepository;
 import com.epicode.EASYPLAY.service.EventoService;
 import com.epicode.EASYPLAY.service.UtenteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +90,9 @@ public class EventoController {
     @Autowired
     private UtenteService utenteService;
 
+    @Autowired
+    private UtenteRepository utenteRepository;
+
     @GetMapping
     public ResponseEntity<List<EventoDTO>> getAllEventi() {
         return new ResponseEntity<>(eventoService.getAllEventi(), HttpStatus.OK);
@@ -101,10 +107,28 @@ public class EventoController {
         return new ResponseEntity<>(evento, HttpStatus.OK);
     }
 
-    @PostMapping
-    public ResponseEntity<EventoDTO> creaEvento(@RequestBody EventoDTO eventoDTO, @RequestHeader("utenteId") Long utenteId) {
-        Optional<Utente> creatore = utenteService.findById(utenteId);
-        return new ResponseEntity<>(eventoService.creaEvento(eventoDTO, creatore.orElse(null)), HttpStatus.CREATED);
+   /* @PostMapping("/new/{utenteId}")
+    public ResponseEntity<?> creaEvento(@RequestBody EventoDTOnoid eventoDTO, @PathVariable Long utenteId) {
+
+        Utente creatore = utenteService.findById(utenteId).orElseThrow(() -> new RuntimeException("utente non trovato"));
+        EventoDTO evento = eventoService.creaEvento(eventoDTO, creatore.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(evento);
+    }*/
+
+    @PostMapping("/new/{utenteId}")
+    public ResponseEntity<?> creaEvento(@RequestBody EventoDTOnoid eventoDTO,
+                                        @PathVariable Long utenteId) {
+        if (utenteId != null) {
+            Optional<Utente> utente = utenteRepository.findById(utenteId);
+            // altre operazioni
+        } else {
+            // Gestisci il caso in cui l'ID sia nullo
+            throw new IllegalArgumentException("L'ID non può essere nullo.");
+        }
+        Utente creatore = utenteService.findById(utenteId)
+                .orElseThrow(() -> new RuntimeException("utente non trovato"));
+        EventoDTO evento = eventoService.creaEvento(eventoDTO, creatore.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(evento);
     }
 
     @DeleteMapping("/{id}")

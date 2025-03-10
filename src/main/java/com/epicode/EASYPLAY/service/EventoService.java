@@ -5,6 +5,7 @@ import com.epicode.EASYPLAY.payload.EventoDTO;
 import com.epicode.EASYPLAY.model.Evento;
 import com.epicode.EASYPLAY.model.Prenotazione;
 import com.epicode.EASYPLAY.model.Utente;
+import com.epicode.EASYPLAY.payload.response.EventoDTOnoid;
 import com.epicode.EASYPLAY.repository.EventoRepository;
 import com.epicode.EASYPLAY.repository.PrenotazioneRepository;
 import com.epicode.EASYPLAY.repository.UtenteRepository;
@@ -27,12 +28,17 @@ public class EventoService {
     @Autowired
     private PrenotazioneRepository prenotazioneRepository;
 
-    public EventoDTO creaEvento(EventoDTO eventoDTO, Utente creatore) {
-        Evento evento = convertToEntity(eventoDTO, creatore);
-        evento.setCreatore(creatore);
-        impostaMaxPartecipanti(evento);
-        evento.setPostiDisponibili(evento.getMaxPartecipanti());
-        return convertToDTO(eventoRepository.save(evento));
+
+
+
+
+    public EventoDTO creaEvento(EventoDTOnoid eventoDTO, Long idUtente) {
+        Utente utente = utenteRepository.findById(idUtente).orElseThrow(() -> new RuntimeException("utente non trovato"));
+        Evento evento = fromNoIdToEntity(eventoDTO);
+        System.out.println("utente : " + utente);
+        evento.setCreatore(utente);
+        evento = eventoRepository.save(evento);
+        return convertToDTO(evento);
     }
 
     private void impostaMaxPartecipanti(Evento evento) {
@@ -64,7 +70,7 @@ public class EventoService {
     public EventoDTO modificaEvento(EventoDTO eventoDTO, Utente utente) {
         Evento eventoEsistente = eventoRepository.findById(eventoDTO.getId()).orElse(null);
         if (eventoEsistente != null && eventoEsistente.getCreatore().equals(utente)) {
-            Evento evento = convertToEntity(eventoDTO, utente);
+            Evento evento = convertToEntity(eventoDTO);
             impostaMaxPartecipanti(evento);
             return convertToDTO(eventoRepository.save(evento));
         }
@@ -119,11 +125,12 @@ public class EventoService {
         dto.setPostiDisponibili(evento.getPostiDisponibili());
         dto.setMaxPartecipanti(evento.getMaxPartecipanti());
         dto.setTipoEvento(evento.getTipoEvento());
-        dto.setCreatoreId(evento.getCreatore().getId());
+        Long creatoreId = evento.getCreatore().getId();
+        dto.setCreatoreId(creatoreId);
         return dto;
     }
 
-    private Evento convertToEntity(EventoDTO dto, Utente utente) {
+    private Evento convertToEntity(EventoDTO dto) {
         Evento evento = new Evento();
         evento.setId(dto.getId());
         evento.setTitolo(dto.getTitolo());
@@ -133,7 +140,42 @@ public class EventoService {
         evento.setPostiDisponibili(dto.getPostiDisponibili());
         evento.setMaxPartecipanti(dto.getMaxPartecipanti());
         evento.setTipoEvento(dto.getTipoEvento());
-        evento.setCreatore(utente);
+        evento.setCreatore(utenteRepository.findById(dto.getCreatoreId()).orElseThrow(() -> new RuntimeException("utente non trovato")));
         return evento;
     }
+
+    private EventoDTOnoid toEventoDTOnoId(EventoDTO dto){
+        EventoDTOnoid noId = new EventoDTOnoid();
+        noId.setTitolo(dto.getTitolo());
+        noId.setDescrizione(dto.getDescrizione());
+        noId.setData(dto.getData());
+        noId.setLuogo(dto.getLuogo());
+        noId.setPostiDisponibili(dto.getPostiDisponibili());
+        noId.setMaxPartecipanti(dto.getMaxPartecipanti());
+        noId.setTipoEvento(dto.getTipoEvento());
+        /*noId.setCreatoreId(dto.getCreatoreId());*/
+        return  noId;
+    }
+
+    private Evento fromNoIdToEntity(EventoDTOnoid noId){
+   /*     if (noId.getCreatoreId() == null) {
+            throw new IllegalArgumentException("ID creatore non può essere null");
+        }*/
+
+        Evento evento = new Evento();
+        evento.setTitolo(noId.getTitolo());
+        evento.setDescrizione(noId.getDescrizione());
+        evento.setData(noId.getData());
+        evento.setLuogo(noId.getLuogo());
+        evento.setPostiDisponibili(noId.getPostiDisponibili());
+        evento.setMaxPartecipanti(noId.getMaxPartecipanti());
+        evento.setTipoEvento(noId.getTipoEvento());
+
+       /* Utente utente = utenteRepository.findById(noId.getCreatoreId())
+                .orElseThrow(() -> new RuntimeException("Utente non trovato"));*/
+
+      /*  evento.setCreatore(utente);*/
+        return evento;
+    }
+
 }
