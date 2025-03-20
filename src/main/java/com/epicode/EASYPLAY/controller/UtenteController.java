@@ -5,13 +5,20 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.epicode.EASYPLAY.exception.EmailDuplicateException;
 import com.epicode.EASYPLAY.exception.UsernameDuplicateException;
+import com.epicode.EASYPLAY.model.Utente;
+import com.epicode.EASYPLAY.payload.UtenteInfoResponse;
+import com.epicode.EASYPLAY.payload.EventoDTO;
 import com.epicode.EASYPLAY.payload.request.LoginRequest;
 import com.epicode.EASYPLAY.payload.request.RegistrazioneRequest;
 import com.epicode.EASYPLAY.payload.response.LoginResponse;
+import com.epicode.EASYPLAY.service.EventoService;
 import com.epicode.EASYPLAY.service.UtenteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.annotation.Validated;
@@ -19,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -30,6 +38,9 @@ public class UtenteController {
 
     @Autowired
     Cloudinary cloudinaryConfig;
+
+    @Autowired
+    private EventoService eventoService;
 
 
     @PostMapping("/new")
@@ -86,6 +97,44 @@ public class UtenteController {
             throw new RuntimeException("Errore nel caricamento dell'immagine: " + e);
         }
     }
+
+
+
+    @GetMapping("/me/info")
+    public ResponseEntity<UtenteInfoResponse> getUserInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String username;
+        if (authentication.getPrincipal() instanceof UserDetails) {
+            username = ((UserDetails) authentication.getPrincipal()).getUsername();
+        } else {
+            username = authentication.getPrincipal().toString();
+        }
+
+        Utente utente = utenteService.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+
+        List<EventoDTO> eventiPartecipati = eventoService.getEventiPartecipati(utente.getId());
+        List<EventoDTO> eventiCreati = eventoService.getEventiCreati(utente.getId());
+
+        UtenteInfoResponse response = new UtenteInfoResponse();
+        response.setId(utente.getId());
+        response.setUsername(utente.getUsername());
+        response.setEmail(utente.getEmail());
+        response.setNome(utente.getNome());
+        response.setCognome(utente.getCognome());
+        response.setEventiPartecipati(eventiPartecipati);
+        response.setEventiCreati(eventiCreati);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+
 
 
 }

@@ -112,4 +112,9 @@ public class UtenteService {
     public Optional<Utente> findById(Long id){
         return utenteRepo.findById(id);
     }
+
+    public Optional<Utente> findByUsername(String username) {
+        return utenteRepo.findByUsername(username);
+    }
+
 }

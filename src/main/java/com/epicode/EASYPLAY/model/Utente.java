@@ -40,8 +40,4 @@ public class Utente {
 
     private String avatar;
 
-
-
-
-
 }

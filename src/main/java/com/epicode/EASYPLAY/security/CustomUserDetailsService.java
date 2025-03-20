@@ -23,9 +23,16 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         Utente user = repo.findByUsername(username).orElseThrow();
 
-        UserDetails dettagliUtente= User.builder().username(user.getUsername())
+        /*UserDetails dettagliUtente= User.builder().username(user.getUsername())
                 .password((user.getPassword()))
-                .roles(String.valueOf(user.getRuolo())).build();
+                .roles(String.valueOf(user.getRuolo())).build();*/
+
+        UserDetails dettagliUtente = User.builder()
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .roles(user.getRuolo().toUpperCase()) // Assicurati che sia ROLE_USER o ROLE_ADMIN
+                .build();
+
 
         return dettagliUtente;
     }

@@ -43,13 +43,13 @@ public class EventoService {
 
     private void impostaMaxPartecipanti(Evento evento) {
         switch (evento.getTipoEvento()) {
-            case "calcio5":
+            case "calcio a 5":
                 evento.setMaxPartecipanti(10);
                 break;
-            case "calcio7":
+            case "calcio a 7":
                 evento.setMaxPartecipanti(14);
                 break;
-            case "calcio11":
+            case "calcio a 11":
                 evento.setMaxPartecipanti(22);
                 break;
             case "padel":
@@ -176,6 +176,25 @@ public class EventoService {
 
       /*  evento.setCreatore(utente);*/
         return evento;
+    }
+
+/*
+    ----------------------------------
+*/
+
+    public List<EventoDTO> getEventiPartecipati(Long utenteId) {
+        List<Prenotazione> prenotazioni = prenotazioneRepository.findByUtenteId(utenteId);
+        return prenotazioni.stream()
+                .map(Prenotazione::getEvento)
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<EventoDTO> getEventiCreati(Long utenteId) {
+        List<Evento> eventi = eventoRepository.findByCreatoreId(utenteId);
+        return eventi.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
 }
