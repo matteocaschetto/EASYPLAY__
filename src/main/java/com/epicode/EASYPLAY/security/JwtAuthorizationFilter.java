@@ -43,17 +43,11 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
             if (claims != null && jwtUtil.checkExpiration(claims)) {
 
-               /* List<GrantedAuthority> ruoli = new ArrayList<>();
-                GrantedAuthority ruoloAutenticato = new SimpleGrantedAuthority(claims.get("roles").toString());
-                ruoli.add(ruoloAutenticato);
-
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(claims.getSubject(), "", ruoli);
-
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);*/
                 List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(claims.get("roles").toString());
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(claims.getSubject(), "", authorities);
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                System.out.println("🔐 Autenticazione impostata correttamente: " + authenticationToken);
+
 
             }
 
@@ -77,6 +71,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         System.out.println("Token recuperato: " + token);
         Claims claims = jwtUtil.validaClaims(request);
         if (claims != null && jwtUtil.checkExpiration(claims)) {
+
             // Debug log per verificare il ruolo
             System.out.println("Claims validati: " + claims);
         }
@@ -90,12 +85,19 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+
+        //VERIFICHE DI AUTENTICAZIONE
         System.out.println("Autenticazione attuale: " + authentication);
 
         System.out.println("Token ricevuto: " + token);
         System.out.println("Claims validati: " + claims);
         System.out.println("Ruolo utente: " + claims.get("roles"));
         System.out.println("Autenticazione impostata: " + SecurityContextHolder.getContext().getAuthentication());
+
+        System.out.println("🔍 Richiesta in ingresso: " + request.getRequestURI());
+        System.out.println("🔑 Token ricevuto: " + token);
+
 
     }
 

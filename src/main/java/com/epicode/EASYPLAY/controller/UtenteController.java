@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -83,20 +84,35 @@ public class UtenteController {
 
     }
 
+    @PatchMapping("/auth/avatar")
+    public ResponseEntity<Map<String, String>> cambiaAvatarUtente(
+            @RequestPart("avatar") MultipartFile avatar) {
 
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    @PatchMapping("/auth/avatar/{idUtente}")
-    public ResponseEntity<?> cambiaAvatarUtente(@RequestPart("avatar") MultipartFile avatar, @PathVariable long idUtente) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            System.out.println(" Authentication è NULL o non autenticata!");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Utente non autenticato"));
+        }
+
+        String username = authentication.getName();
+        System.out.println(" Username autenticato: " + username);
+
         try {
             Map mappa = cloudinaryConfig.uploader().upload(avatar.getBytes(), ObjectUtils.emptyMap());
             String urlImage = mappa.get("secure_url").toString();
-            utenteService.modificaAvatar(idUtente, urlImage);
-            return new ResponseEntity<>("Immagine avatar sostituita", HttpStatus.OK);
+            utenteService.modificaAvatar(username, urlImage);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("avatar", urlImage);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (IOException e) {
             throw new RuntimeException("Errore nel caricamento dell'immagine: " + e);
         }
     }
+
+
 
 
 

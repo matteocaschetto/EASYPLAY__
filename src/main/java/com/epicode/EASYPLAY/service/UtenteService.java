@@ -82,9 +82,11 @@ public class UtenteService {
         return new LoginResponse(username, token);
     }
 
-    public String modificaAvatar(long idUtente, String urlImg) {
-        Utente utente = utenteRepo.findById(idUtente).orElseThrow();
+    public String modificaAvatar(String username, String urlImg) {
+        Utente utente = utenteRepo.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
         utente.setAvatar(urlImg);
+        utenteRepo.save(utente);
         return "Immagine dell'avatar modificata";
     }
 

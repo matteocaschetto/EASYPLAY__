@@ -16,6 +16,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -42,39 +47,66 @@ public class WebSecurityConfig {
         return auth.build();
     }
 
-    /*@Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
-        httpSecurity.cors(AbstractHttpConfigurer::disable).csrf(AbstractHttpConfigurer::disable);
+/*//FUNZIONANTE
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity
 
-        httpSecurity.authorizeHttpRequests(authorize -> authorize
+                .cors(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/user/new", "/user/login").permitAll()
-                        .requestMatchers("/api/eventi/new").authenticated() // Richiede autenticazione per creare eventi
-                        .requestMatchers("/api/eventi/**", "/user/auth/**", "/api/prenotazioni/**").permitAll() // Permetti GET a /api/eventi/id, ecc. (potresti voler restringere anche questi)
-                        .requestMatchers("/user/me/info").authenticated()
-                        .requestMatchers("/user/admin/**").permitAll()
-                        .anyRequest().authenticated())
+                        .requestMatchers("/api/eventi/new", "/user/me/info",  "/user/auth/avatar").authenticated()
+                        .requestMatchers("/api/eventi/**", "/user/auth/**", "/api/prenotazioni/**").permitAll()
+                        .anyRequest().authenticated()
+                )
                 .sessionManagement(custom -> custom.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(filtroAutorizzazione, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
+
+    }
+    //PROVA
+@Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.addAllowedOrigin("http://localhost:5173"); // Permetti il frontend
+        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfig.addAllowedHeader("*");
+        corsConfig.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfig);
+        return source;
     }*/
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .cors(AbstractHttpConfigurer::disable)
-                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/user/new", "/user/login").permitAll()
-                        .requestMatchers("/api/eventi/new", "/user/me/info").authenticated()
-                        .requestMatchers("/api/eventi/**", "/user/auth/**", "/api/prenotazioni/**").permitAll()
+                        .requestMatchers("/api/eventi/new", "/user/me/info", "/user/auth/avatar").authenticated()
+                        .requestMatchers("/api/eventi/**", "/api/prenotazioni/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(custom -> custom.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(filtroAutorizzazione, UsernamePasswordAuthenticationFilter.class); // Assicurati che filtroAutorizzazione sia un bean
-
+                .addFilterBefore(filtroAutorizzazione, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Abilita l'origine del tuo frontend
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+        configuration.setAllowCredentials(true); // se il frontend invia credenziali
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
 }
