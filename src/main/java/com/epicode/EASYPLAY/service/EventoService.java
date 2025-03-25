@@ -33,13 +33,16 @@ public class EventoService {
 
 
     public EventoDTO creaEvento(EventoDTOnoid eventoDTO, Long idUtente) {
-        Utente utente = utenteRepository.findById(idUtente).orElseThrow(() -> new RuntimeException("utente non trovato"));
+        Utente utente = utenteRepository.findById(idUtente)
+                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+
         Evento evento = fromNoIdToEntity(eventoDTO);
-        System.out.println("utente : " + utente);
-        evento.setCreatore(utente);
+        evento.setCreatore(utente); // Assegniamo l'utente autenticato come creatore
         evento = eventoRepository.save(evento);
+
         return convertToDTO(evento);
     }
+
 
     private void impostaMaxPartecipanti(Evento evento) {
         switch (evento.getTipoEvento()) {
@@ -85,25 +88,28 @@ public class EventoService {
         return eventoRepository.findById(id).map(this::convertToDTO).orElse(null);
     }
 
-    public Prenotazione prenotaPosti(Long eventoId, Long utenteId, int numeroPosti) {
-        Evento evento = eventoRepository.findById(eventoId).orElse(null);
-        Utente utente = utenteRepository.findById(utenteId).orElse(null);
 
-        if (evento != null && utente != null && evento.getPostiDisponibili() >= numeroPosti) {
-            Prenotazione prenotazione = new Prenotazione();
-            prenotazione.setUtente(utente);
-            prenotazione.setEvento(evento);
-            prenotazione.setDataPrenotazione(new Date());
-            prenotazione.setNumeroPosti(numeroPosti);
+public Prenotazione prenotaPosti(Long eventoId, Long utenteId, int numeroPosti) {
+    Evento evento = eventoRepository.findById(eventoId).orElse(null);
+    Utente utente = utenteRepository.findById(utenteId).orElse(null);
 
-            evento.setPostiDisponibili(evento.getPostiDisponibili() - numeroPosti);
-            eventoRepository.save(evento);
+    if (evento != null && utente != null && evento.getPostiDisponibili() >= numeroPosti) {
+        Prenotazione prenotazione = new Prenotazione();
+        prenotazione.setUtente(utente);
+        prenotazione.setEvento(evento);
+        prenotazione.setDataPrenotazione(new Date());
+        prenotazione.setNumeroPosti(numeroPosti);
 
-            return prenotazioneRepository.save(prenotazione);
-        }
+        evento.setPostiDisponibili(evento.getPostiDisponibili() - numeroPosti);
+        eventoRepository.save(evento);
 
-        return null;
+        return prenotazioneRepository.save(prenotazione);
     }
+
+    return null;
+}
+
+
 
     public void annullaPrenotazione(Long prenotazioneId, Long utenteId) {
         Prenotazione prenotazione = prenotazioneRepository.findById(prenotazioneId).orElse(null);
@@ -153,14 +159,11 @@ public class EventoService {
         noId.setPostiDisponibili(dto.getPostiDisponibili());
         noId.setMaxPartecipanti(dto.getMaxPartecipanti());
         noId.setTipoEvento(dto.getTipoEvento());
-        /*noId.setCreatoreId(dto.getCreatoreId());*/
         return  noId;
     }
 
     private Evento fromNoIdToEntity(EventoDTOnoid noId){
-   /*     if (noId.getCreatoreId() == null) {
-            throw new IllegalArgumentException("ID creatore non può essere null");
-        }*/
+
 
         Evento evento = new Evento();
         evento.setTitolo(noId.getTitolo());
@@ -171,10 +174,7 @@ public class EventoService {
         evento.setMaxPartecipanti(noId.getMaxPartecipanti());
         evento.setTipoEvento(noId.getTipoEvento());
 
-       /* Utente utente = utenteRepository.findById(noId.getCreatoreId())
-                .orElseThrow(() -> new RuntimeException("Utente non trovato"));*/
 
-      /*  evento.setCreatore(utente);*/
         return evento;
     }
 

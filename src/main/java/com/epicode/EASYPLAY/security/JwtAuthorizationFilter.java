@@ -2,6 +2,8 @@
 package com.epicode.EASYPLAY.security;
 
 import com.epicode.EASYPLAY.exception.CreateTokenException;
+import com.epicode.EASYPLAY.model.Utente;
+import com.epicode.EASYPLAY.repository.UtenteRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -15,13 +17,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,9 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     @Autowired
     JwtUtil jwtUtil;
 
-
+//prova
+    @Autowired
+    private UtenteRepository utenteRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -44,9 +46,16 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             if (claims != null && jwtUtil.checkExpiration(claims)) {
 
                 List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(claims.get("roles").toString());
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(claims.getSubject(), "", authorities);
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                System.out.println("🔐 Autenticazione impostata correttamente: " + authenticationToken);
+                Utente utente = utenteRepository.findByUsername(claims.getSubject()).orElse(null);
+
+                if (utente != null) {
+                    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(utente.getUsername(), "", authorities);
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    System.out.println("🔐 Autenticazione impostata con utente: " + utente);
+                    System.out.println("🔐 Autenticazione impostata con username: " + utente.getUsername());
+                }
+
+
 
 
             }

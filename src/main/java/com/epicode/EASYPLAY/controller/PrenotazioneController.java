@@ -1,32 +1,55 @@
 package com.epicode.EASYPLAY.controller;
 
 import com.epicode.EASYPLAY.model.Prenotazione;
+import com.epicode.EASYPLAY.model.Utente;
 import com.epicode.EASYPLAY.payload.PrenotazioneDTO;
+import com.epicode.EASYPLAY.repository.UtenteRepository;
 import com.epicode.EASYPLAY.service.EventoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+
+
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/prenotazioni")
 public class PrenotazioneController {
 
-@Autowired
-private EventoService eventoService;
+    @Autowired
+    private EventoService eventoService;
 
-@PostMapping("/prenotazioni")
-public ResponseEntity<Prenotazione> prenotaPosti(@RequestBody PrenotazioneDTO prenotazioneDTO, @RequestHeader("utenteId") Long utenteId) {
-    Prenotazione prenotazione = eventoService.prenotaPosti(prenotazioneDTO.getEventoId(), utenteId, prenotazioneDTO.getNumeroPosti());
-    if (prenotazione != null) {
-        return new ResponseEntity<>(prenotazione, HttpStatus.CREATED);
+    @Autowired
+    private UtenteRepository utenteRepository;
+
+
+
+    @PostMapping("/prenotaPosto")
+    public ResponseEntity<?> prenotaPosto(@RequestBody PrenotazioneDTO prenotazioneDTO,
+                                          @AuthenticationPrincipal String username) {
+        Utente utente = utenteRepository.findByUsername(username).orElse(null);
+        if (utente == null) {
+            return new ResponseEntity<>("Utente non trovato", HttpStatus.UNAUTHORIZED);
+        }
+
+        Prenotazione prenotazione = eventoService.prenotaPosti(
+                prenotazioneDTO.getEventoId(),
+                utente.getId(),
+                prenotazioneDTO.getNumeroPosti()
+        );
+
+        return ResponseEntity.ok(prenotazione);
     }
-    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-}
 
-@DeleteMapping("/{id}")
-public ResponseEntity<Void> annullaPrenotazione(@PathVariable Long id, @RequestHeader("utenteId") Long utenteId) {
-    eventoService.annullaPrenotazione(id, utenteId);
-    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-}
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> annullaPrenotazione(@PathVariable Long id, @AuthenticationPrincipal Utente utenteAutenticato) {
+        if (utenteAutenticato == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        eventoService.annullaPrenotazione(id, utenteAutenticato.getId());
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

@@ -12,12 +12,14 @@ import com.epicode.EASYPLAY.service.UtenteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5177")
 @RestController
 @RequestMapping("/api/eventi")
 public class EventoController {
@@ -45,26 +47,27 @@ public class EventoController {
         return new ResponseEntity<>(evento, HttpStatus.OK);
     }
 
+    @CrossOrigin(origins = "http://localhost:5177")
+    @PostMapping("/new")
+    public ResponseEntity<?> creaEvento(@RequestBody EventoDTOnoid eventoDTO) {
+        // Ottenere l'utente autenticato
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-
-
-
-    @CrossOrigin(origins = "http://localhost:5173") // Permette richieste dal frontend
-    @PostMapping("/new/{utenteId}")
-    public ResponseEntity<?> creaEvento(@RequestBody EventoDTOnoid eventoDTO,
-                                        @PathVariable Long utenteId) {
-        if (utenteId == null) {
-            throw new IllegalArgumentException("L'ID non può essere nullo.");
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Utente non autenticato");
         }
 
-        Optional<Utente> utente = utenteRepository.findById(utenteId);
-
-        Utente creatore = utenteService.findById(utenteId)
+        // Estrarre l'username dal token JWT
+        String username = authentication.getName();
+        Utente creatore = utenteRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato"));
 
-        EventoDTO evento = eventoService.creaEvento(eventoDTO, creatore.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(evento);
+        // Creare l'evento con l'utente autenticato
+        EventoDTO eventoCreato = eventoService.creaEvento(eventoDTO, creatore.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(eventoCreato);
     }
+
+
 
 
     @DeleteMapping("/{id}")
@@ -81,20 +84,5 @@ public class EventoController {
         return new ResponseEntity<>(eventoService.modificaEvento(eventoDTO, utente.orElse(null)), HttpStatus.OK);
     }
 
-    @PostMapping("/{eventoId}/prenota")
-    public ResponseEntity<?> prenotaPosti(@PathVariable Long eventoId, @RequestHeader("utenteId") Long utenteId, @RequestParam int numeroPosti) {
-        if(numeroPosti <= 0){
-            return ResponseEntity.badRequest().body("Il numero dei posti deve essere maggiore di zero.");
-        }
 
-        return Optional.ofNullable(eventoService.prenotaPosti(eventoId, utenteId, numeroPosti))
-                .map(prenotazione -> ResponseEntity.ok("Prenotazione effettuata con successo."))
-                .orElse(ResponseEntity.badRequest().body("Impossibile effettuare la prenotazione. Controlla i posti disponibili o l'esistenza dell'evento."));
-    }
-
-    @DeleteMapping("/prenotazioni/{prenotazioneId}")
-    public ResponseEntity<Void> annullaPrenotazione(@PathVariable Long prenotazioneId, @RequestHeader("utenteId") Long utenteId) {
-        eventoService.annullaPrenotazione(prenotazioneId, utenteId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
 }
