@@ -43,13 +43,31 @@ public class PrenotazioneController {
     }
 
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> annullaPrenotazione(@PathVariable Long id, @AuthenticationPrincipal Utente utenteAutenticato) {
+  /*  @DeleteMapping("/{id}")
+    public ResponseEntity<Void> annullaPrenotazione(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Utente utenteAutenticato) {
         if (utenteAutenticato == null) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         eventoService.annullaPrenotazione(id, utenteAutenticato.getId());
+        return ResponseEntity.noContent().build();
+    }*/
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> annullaPrenotazione(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Utente utenteAutenticato
+    ) {
+        if (utenteAutenticato == null) {
+            System.out.println("❌ Nessun utente autenticato");
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        System.out.println("✅ Utente autenticato: " + utenteAutenticato.getUsername());
+        eventoService.annullaPrenotazione(id, utenteAutenticato.getId());
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
 }

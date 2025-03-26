@@ -5,6 +5,7 @@ package com.epicode.EASYPLAY.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -54,6 +55,7 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/user/new", "/user/login").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/prenotazioni/**").hasRole("USER")
                         .requestMatchers("/api/eventi/new", "/user/me/info", "/user/auth/avatar", "/api/prenotazioni/**").authenticated()
                         .requestMatchers("/api/eventi/**").permitAll()
                         .anyRequest().authenticated()
@@ -64,14 +66,16 @@ public class WebSecurityConfig {
         return httpSecurity.build();
     }
 
+
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Abilita l'origine del tuo frontend
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5177"));
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5177")); // Frontend
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
-        configuration.setAllowCredentials(true); // se il frontend invia credenziali
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "utenteId"));
+        configuration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

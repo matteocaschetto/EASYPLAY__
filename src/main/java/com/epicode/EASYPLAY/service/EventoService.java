@@ -10,7 +10,9 @@ import com.epicode.EASYPLAY.repository.EventoRepository;
 import com.epicode.EASYPLAY.repository.PrenotazioneRepository;
 import com.epicode.EASYPLAY.repository.UtenteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 import java.util.List;
@@ -63,12 +65,24 @@ public class EventoService {
         }
     }
 
+
     public void eliminaEvento(Long id, Utente utente) {
         Evento evento = eventoRepository.findById(id).orElse(null);
-        if (evento != null && evento.getCreatore().equals(utente)) {
-            eventoRepository.delete(evento);
+
+        if (evento == null) {
+            System.out.println("⛔ Evento non trovato!");
+            return;
         }
+
+        if (!evento.getCreatore().equals(utente)) {
+            System.out.println("⛔ L'utente non è il creatore di questo evento!");
+            return;
+        }
+
+        System.out.println("✅ Evento eliminato con successo!");
+        eventoRepository.delete(evento);
     }
+
 
     public EventoDTO modificaEvento(EventoDTO eventoDTO, Utente utente) {
         Evento eventoEsistente = eventoRepository.findById(eventoDTO.getId()).orElse(null);
@@ -112,14 +126,24 @@ public Prenotazione prenotaPosti(Long eventoId, Long utenteId, int numeroPosti) 
 
 
     public void annullaPrenotazione(Long prenotazioneId, Long utenteId) {
-        Prenotazione prenotazione = prenotazioneRepository.findById(prenotazioneId).orElse(null);
-        if (prenotazione != null && prenotazione.getUtente().getId().equals(utenteId)) {
-            Evento evento = prenotazione.getEvento();
-            evento.setPostiDisponibili(evento.getPostiDisponibili() + prenotazione.getNumeroPosti());
-            eventoRepository.save(evento);
-            prenotazioneRepository.delete(prenotazione);
+        Prenotazione prenotazione = prenotazioneRepository.findById(prenotazioneId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prenotazione non trovata"));
+
+        if (!prenotazione.getUtente().getId().equals(utenteId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Non autorizzato");
         }
+
+        Evento evento = prenotazione.getEvento();
+        if (evento == null) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "L'evento associato non esiste");
+        }
+
+        evento.setPostiDisponibili(evento.getPostiDisponibili() + prenotazione.getNumeroPosti());
+        eventoRepository.save(evento);
+
+        prenotazioneRepository.delete(prenotazione);
     }
+
 
     private EventoDTO convertToDTO(Evento evento) {
         EventoDTO dto = new EventoDTO();
@@ -127,6 +151,7 @@ public Prenotazione prenotaPosti(Long eventoId, Long utenteId, int numeroPosti) 
         dto.setTitolo(evento.getTitolo());
         dto.setDescrizione(evento.getDescrizione());
         dto.setData(evento.getData());
+        dto.setOrario(evento.getOrario());
         dto.setLuogo(evento.getLuogo());
         dto.setPostiDisponibili(evento.getPostiDisponibili());
         dto.setMaxPartecipanti(evento.getMaxPartecipanti());
@@ -142,6 +167,7 @@ public Prenotazione prenotaPosti(Long eventoId, Long utenteId, int numeroPosti) 
         evento.setTitolo(dto.getTitolo());
         evento.setDescrizione(dto.getDescrizione());
         evento.setData(dto.getData());
+        evento.setOrario(dto.getOrario());
         evento.setLuogo(dto.getLuogo());
         evento.setPostiDisponibili(dto.getPostiDisponibili());
         evento.setMaxPartecipanti(dto.getMaxPartecipanti());
@@ -169,6 +195,7 @@ public Prenotazione prenotaPosti(Long eventoId, Long utenteId, int numeroPosti) 
         evento.setTitolo(noId.getTitolo());
         evento.setDescrizione(noId.getDescrizione());
         evento.setData(noId.getData());
+        evento.setOrario(noId.getOrario());
         evento.setLuogo(noId.getLuogo());
         evento.setPostiDisponibili(noId.getPostiDisponibili());
         evento.setMaxPartecipanti(noId.getMaxPartecipanti());

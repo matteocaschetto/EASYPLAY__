@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalTime;
 import java.util.Date;
 
 @Entity
@@ -25,6 +26,9 @@ public class Evento {
 
     @Column(nullable = false)
     private Date data;
+
+    @Column(nullable = false)
+    private LocalTime orario;
 
     @Column(nullable = false)
     private String luogo;

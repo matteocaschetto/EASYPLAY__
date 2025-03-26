@@ -68,14 +68,21 @@ public class EventoController {
     }
 
 
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> eliminaEvento(@PathVariable Long id, @RequestHeader("utenteId") Long utenteId) {
+      System.out.println("🔍 Tentativo di eliminazione evento ID: " + id + " da utente ID: " + utenteId);
+
+      Optional<Utente> utente = utenteService.findById(utenteId);
+      if (utente.isEmpty()) {
+          System.out.println("⛔ Utente non trovato!");
+          return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+      }
+
+      eventoService.eliminaEvento(id, utente.get());
+      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
 
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminaEvento(@PathVariable Long id, @RequestHeader("utenteId") Long utenteId) {
-        Optional<Utente> utente = utenteService.findById(utenteId);
-        eventoService.eliminaEvento(id, utente.orElse(null));
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
 
     @PutMapping("/{id}")
     public ResponseEntity<EventoDTO> modificaEvento(@PathVariable Long id, @RequestBody EventoDTO eventoDTO, @RequestHeader("utenteId") Long utenteId) {
