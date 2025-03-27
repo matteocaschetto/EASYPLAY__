@@ -55,7 +55,7 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/user/new", "/user/login").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/prenotazioni/**").hasRole("USER")
+                      /*  .requestMatchers(HttpMethod.DELETE, "/api/prenotazioni/**").authenticated()*/
                         .requestMatchers("/api/eventi/new", "/user/me/info", "/user/auth/avatar", "/api/prenotazioni/**").authenticated()
                         .requestMatchers("/api/eventi/**").permitAll()
                         .anyRequest().authenticated()

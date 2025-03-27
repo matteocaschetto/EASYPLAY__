@@ -143,6 +143,7 @@ public class UtenteController {
         response.setEmail(utente.getEmail());
         response.setNome(utente.getNome());
         response.setCognome(utente.getCognome());
+        response.setAvatar(utente.getAvatar());
         response.setEventiPartecipati(eventiPartecipati);
         response.setEventiCreati(eventiCreati);
 

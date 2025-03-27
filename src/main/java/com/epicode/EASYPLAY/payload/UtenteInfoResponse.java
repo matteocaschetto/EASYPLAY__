@@ -10,6 +10,7 @@ public class UtenteInfoResponse {
     private String email;
     private String nome;
     private String cognome;
+    private String avatar;
     private List<EventoDTO> eventiPartecipati;
     private List<EventoDTO> eventiCreati;
 }

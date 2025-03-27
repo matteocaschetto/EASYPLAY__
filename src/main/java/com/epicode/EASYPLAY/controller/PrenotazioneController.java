@@ -43,17 +43,7 @@ public class PrenotazioneController {
     }
 
 
-  /*  @DeleteMapping("/{id}")
-    public ResponseEntity<Void> annullaPrenotazione(
-            @PathVariable Long id,
-            @AuthenticationPrincipal Utente utenteAutenticato) {
-        if (utenteAutenticato == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
-        eventoService.annullaPrenotazione(id, utenteAutenticato.getId());
-        return ResponseEntity.noContent().build();
-    }*/
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> annullaPrenotazione(
