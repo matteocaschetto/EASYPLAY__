@@ -27,7 +27,7 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        /*JWTPARSER = Jwts.parser().setSigningKey(JWTSECRET);*/
+
         JWTPARSER = Jwts.parserBuilder()
                 .setSigningKey(Keys.hmacShaKeyFor(JWTSECRET.getBytes(StandardCharsets.UTF_8)))
                 .build();

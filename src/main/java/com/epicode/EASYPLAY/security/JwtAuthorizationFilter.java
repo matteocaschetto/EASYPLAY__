@@ -81,8 +81,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         Claims claims = jwtUtil.validaClaims(request);
         if (claims != null && jwtUtil.checkExpiration(claims)) {
 
-            // Debug log per verificare il ruolo
-            System.out.println("Claims validati: " + claims);
+
         }
 
         System.out.println("JwtAuthorizationFilter attivato per la richiesta: " + request.getRequestURI());
@@ -98,14 +97,6 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
         //VERIFICHE DI AUTENTICAZIONE
         System.out.println("Autenticazione attuale: " + authentication);
-
-        System.out.println("Token ricevuto: " + token);
-        System.out.println("Claims validati: " + claims);
-        System.out.println("Ruolo utente: " + claims.get("roles"));
-        System.out.println("Autenticazione impostata: " + SecurityContextHolder.getContext().getAuthentication());
-
-        System.out.println("🔍 Richiesta in ingresso: " + request.getRequestURI());
-        System.out.println("🔑 Token ricevuto: " + token);
 
 
     }

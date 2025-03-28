@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -124,24 +125,17 @@ public Prenotazione prenotaPosti(Long eventoId, Long utenteId, int numeroPosti) 
 }
 
 
-
     public void annullaPrenotazione(Long prenotazioneId, Long utenteId) {
-        Prenotazione prenotazione = prenotazioneRepository.findById(prenotazioneId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prenotazione non trovata"));
+        System.out.println("🔍 Controllo nel database la prenotazione con ID: " + prenotazioneId);
 
-        if (!prenotazione.getUtente().getId().equals(utenteId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Non autorizzato");
+        Optional<Prenotazione> optionalPrenotazione = prenotazioneRepository.findById(prenotazioneId);
+        if (optionalPrenotazione.isEmpty()) {
+            System.out.println("❌ Prenotazione con ID " + prenotazioneId + " non trovata!");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Prenotazione non trovata");
         }
 
-        Evento evento = prenotazione.getEvento();
-        if (evento == null) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "L'evento associato non esiste");
-        }
-
-        evento.setPostiDisponibili(evento.getPostiDisponibili() + prenotazione.getNumeroPosti());
-        eventoRepository.save(evento);
-
-        prenotazioneRepository.delete(prenotazione);
+        Prenotazione prenotazione = optionalPrenotazione.get();
+        System.out.println("✅ Prenotazione trovata: " + prenotazione);
     }
 
 

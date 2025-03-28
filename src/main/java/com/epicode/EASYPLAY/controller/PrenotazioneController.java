@@ -8,9 +8,10 @@ import com.epicode.EASYPLAY.service.EventoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.server.ResponseStatusException;
 
 
 @RestController
@@ -43,21 +44,23 @@ public class PrenotazioneController {
     }
 
 
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> annullaPrenotazione(@PathVariable Long id, Authentication authentication) {
+      if (authentication == null || !authentication.isAuthenticated()) {
+          return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+      }
 
+      System.out.println("✅ Autenticazione trovata: " + authentication);
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> annullaPrenotazione(
-            @PathVariable Long id,
-            @AuthenticationPrincipal Utente utenteAutenticato
-    ) {
-        if (utenteAutenticato == null) {
-            System.out.println("❌ Nessun utente autenticato");
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
+      String username = authentication.getName(); // Ottieni lo username
+      Utente utenteAutenticato = utenteRepository.findByUsername(username)
+              .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utente non trovato"));
 
-        System.out.println("✅ Utente autenticato: " + utenteAutenticato.getUsername());
-        eventoService.annullaPrenotazione(id, utenteAutenticato.getId());
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
+      System.out.println("✅ Utente autenticato: " + utenteAutenticato.getUsername());
+
+      eventoService.annullaPrenotazione(id, utenteAutenticato.getId());
+      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
 
 }

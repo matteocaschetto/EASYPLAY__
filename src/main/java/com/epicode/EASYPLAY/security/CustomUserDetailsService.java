@@ -23,9 +23,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         Utente user = repo.findByUsername(username).orElseThrow();
 
-        /*UserDetails dettagliUtente= User.builder().username(user.getUsername())
-                .password((user.getPassword()))
-                .roles(String.valueOf(user.getRuolo())).build();*/
 
         UserDetails dettagliUtente = User.builder()
                 .username(user.getUsername())

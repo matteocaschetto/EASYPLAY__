@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
-@CrossOrigin(origins = "http://localhost:5177")
 @RestController
 @RequestMapping("/api/eventi")
 public class EventoController {
@@ -47,7 +46,7 @@ public class EventoController {
         return new ResponseEntity<>(evento, HttpStatus.OK);
     }
 
-    @CrossOrigin(origins = "http://localhost:5177")
+
     @PostMapping("/new")
     public ResponseEntity<?> creaEvento(@RequestBody EventoDTOnoid eventoDTO) {
         // Ottenere l'utente autenticato
